@@ -165,57 +165,60 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
       return;
     }
 
+    let currentTool = activeTool;
+
     // Ctrl+Click from ANY tool -> Try to select an object and switch to Select tool
     if ((e.ctrlKey || e.metaKey) && activeTool !== 'select') {
-      const { elements } = useCanvasStore.getState();
-      const hit = [...elements].reverse().find((el) => isPointInElement(point, el));
-      if (hit) {
-        store.setActiveTool('select');
-        store.selectElement(hit.id, e.shiftKey);
-        isMoving.current = true;
-        lastPoint.current = point;
-        return;
-      }
+      const { selectedElementIds } = useCanvasStore.getState();
+      const prevSelection = [...selectedElementIds];
+      store.setActiveTool('select');
+      store.selectElements(prevSelection);
+      currentTool = 'select';
     }
 
-    if (activeTool === 'select') {
+    if (currentTool === 'select') {
       const { elements, selectedElementIds } = useCanvasStore.getState();
-      
+      const isAdditive = e.shiftKey || e.ctrlKey || e.metaKey;
+
       // 1. If clicking on an ALREADY selected element precisely
       const hitSelected = [...elements].reverse().find((el) => selectedElementIds.includes(el.id) && isPointInElement(point, el));
       if (hitSelected) {
+        if (isAdditive) {
+          store.selectElement(hitSelected.id, true);
+          return;
+        }
         isMoving.current = true;
         lastPoint.current = point;
         return;
       }
 
       // 2. If clicking anywhere inside the unified bounding box of current selection
-      const selectedElements = elements.filter(el => selectedElementIds.includes(el.id));
-      if (selectedElements.length > 0) {
-        const bb = getMultiBoundingBox(selectedElements);
-        const isInsideSelectionBox = 
-          point.x >= bb.x - 4 &&
-          point.x <= bb.x + bb.width + 4 &&
-          point.y >= bb.y - 4 &&
-          point.y <= bb.y + bb.height + 4;
+      if (!isAdditive) {
+        const selectedElements = elements.filter(el => selectedElementIds.includes(el.id));
+        if (selectedElements.length > 0) {
+          const bb = getMultiBoundingBox(selectedElements);
+          const isInsideSelectionBox =
+            point.x >= bb.x - 4 &&
+            point.x <= bb.x + bb.width + 4 &&
+            point.y >= bb.y - 4 &&
+            point.y <= bb.y + bb.height + 4;
 
-        if (isInsideSelectionBox) {
-          isMoving.current = true;
-          lastPoint.current = point;
-          return;
+          if (isInsideSelectionBox) {
+            isMoving.current = true;
+            lastPoint.current = point;
+            return;
+          }
         }
       }
 
       // 3. Otherwise, check if clicking a completely new element
       const hitNew = [...elements].reverse().find((el) => isPointInElement(point, el));
       if (hitNew) {
-        const isAdditive = e.shiftKey || e.ctrlKey || e.metaKey;
         store.selectElement(hitNew.id, isAdditive);
         isMoving.current = true;
         lastPoint.current = point;
       } else {
         // Drag-select on empty canvas (unless shift/ctrl/cmd — then keep existing selection)
-        const isAdditive = e.shiftKey || e.ctrlKey || e.metaKey;
         if (!isAdditive) store.clearSelection();
         isDragSelecting.current = true;
         selectionRect.current = { startX: point.x, startY: point.y, x: point.x, y: point.y, width: 0, height: 0 };
@@ -224,8 +227,8 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
       return;
     }
 
-    if (activeTool === 'text') { showTextInput(point); return; }
-    if (activeTool === 'image') { triggerImageUpload(); return; }
+    if (currentTool === 'text') { showTextInput(point); return; }
+    if (currentTool === 'image') { triggerImageUpload(); return; }
 
     // Drawing tools (including eraser)
     isDrawing.current = true;
@@ -330,7 +333,14 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
       };
       if (normalizedRect.width > 5 || normalizedRect.height > 5) {
         const hit = elements.filter((el) => isElementInSelectionRect(el, normalizedRect));
-        if ('shiftKey' in e && e.shiftKey) {
+
+        // Additive check for MouseEvent
+        let isAdditive = false;
+        if ('shiftKey' in e) {
+          isAdditive = e.shiftKey || e.ctrlKey || e.metaKey;
+        }
+
+        if (isAdditive) {
           // Additive
           const { selectedElementIds } = useCanvasStore.getState();
           const combined = [...new Set([...selectedElementIds, ...hit.map((el) => el.id)])];
@@ -443,12 +453,12 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
     if (!canvas) return;
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
-    
+
     if (gridCanvasRef?.current) {
       gridCanvasRef.current.width = gridCanvasRef.current.offsetWidth;
       gridCanvasRef.current.height = gridCanvasRef.current.offsetHeight;
     }
-    
+
     render();
   }, [canvasRef, gridCanvasRef, render]);
 

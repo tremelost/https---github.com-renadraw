@@ -3,7 +3,7 @@
   right: 16px;
   /* TopBar: 16px offset + 10(pad) + 30(row1) + 6+1+6(divider) + 30(row2) + 10(pad) = 109px */
   top: 109px;
-  width: 228px;
+  width: 280px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   border-top: none;            /* seamlessly connects to TopBar above */

@@ -16,6 +16,7 @@ interface CanvasStore extends Omit<CanvasState, 'selectedElementId'> {
   // Actions
   setActiveTool: (tool: ToolType) => void;
   addElement: (element: CanvasElement) => void;
+  setElements: (elements: CanvasElement[]) => void;
   updateElement: (id: string, updates: Partial<CanvasElement>) => void;
   deleteElement: (id: string) => void;
   deleteSelected: () => void;
@@ -72,6 +73,11 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   addElement: (element) => {
     const { elements } = get();
     set({ elements: [...elements, element] });
+  },
+
+  setElements: (elements) => {
+    set({ elements, selectedElementIds: [] });
+    get().pushHistory();
   },
 
   updateElement: (id, updates) => {

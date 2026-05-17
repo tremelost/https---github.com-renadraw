@@ -1,5 +1,5 @@
 import { useCanvasStore } from '../../store/canvasStore';
-import { exportCanvasToPNG } from '../../utils/export';
+import { exportCanvasToPNG, saveToRenadrawFile, loadFromRenadrawFile } from '../../utils/export';
 import './TopBar.css';
 
 export function TopBar() {
@@ -8,13 +8,24 @@ export function TopBar() {
     zoom, setZoom, setPan,
     isDarkMode, toggleDarkMode,
     showGrid, toggleGrid,
-    clearCanvas, elements,
+    clearCanvas, elements, setElements,
   } = useCanvasStore();
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
   const handleExport = () => exportCanvasToPNG(elements, isDarkMode);
+  const handleSave = () => saveToRenadrawFile(elements);
+  const handleLoad = async () => {
+    try {
+      const loadedElements = await loadFromRenadrawFile();
+      setElements(loadedElements);
+    } catch (e) {
+      if (e instanceof Error && e.message !== 'No file selected') {
+        alert(e.message);
+      }
+    }
+  };
   const handleZoomReset = () => { setZoom(1); setPan(0, 0); };
   const handleZoomIn  = () => setZoom(zoom * 1.25);
   const handleZoomOut = () => setZoom(zoom / 1.25);
@@ -92,6 +103,23 @@ export function TopBar() {
         </div>
 
         <div className="topbar-spacer" />
+
+        <div className="topbar-group">
+          <button id="btn-load" className="topbar-btn" onClick={handleLoad} title="Open .renadraw file">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </button>
+          <button id="btn-save" className="topbar-btn" onClick={handleSave} title="Save as .renadraw">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div style={{ width: '1px', height: '20px', background: 'var(--panel-border)', margin: '0 4px' }} />
 
         <button id="btn-export" className="topbar-btn-export" onClick={handleExport} title="Export as PNG">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
