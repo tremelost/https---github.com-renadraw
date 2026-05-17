@@ -1,0 +1,136 @@
+/* ── Horizontal Toolbar at Top Left ── */
+.toolbar {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  transform: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  padding: 8px 12px;
+  box-shadow: 0 8px 32px var(--shadow);
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.toolbar-logo {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  white-space: nowrap;
+  padding-right: 4px;
+}
+
+.toolbar-logo-text { color: var(--text-primary); }
+.toolbar-logo-accent { color: var(--accent); }
+
+.toolbar-divider {
+  width: 1px;
+  height: 26px;
+  background: var(--panel-border);
+  border-radius: 2px;
+  margin: 0 6px;
+}
+
+.toolbar-tools {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.toolbar-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.toolbar-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.toolbar-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.toolbar-btn.active:hover {
+  background: var(--accent-hover);
+  transform: scale(1.05);
+}
+
+.tool-icon {
+  font-style: normal;
+  line-height: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Tooltip (now drops DOWN since toolbar is at top) ── */
+.tool-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px var(--shadow);
+  z-index: 200;
+}
+
+.tool-tooltip kbd {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.toolbar-btn:hover .tool-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Arrow pointing UP (since tooltip is below the toolbar) */
+.tool-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--tooltip-bg);
+}

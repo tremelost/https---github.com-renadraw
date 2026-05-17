@@ -1,0 +1,50 @@
+.status-bar {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 6px 14px;
+  box-shadow: 0 4px 16px var(--shadow);
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  white-space: nowrap;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.status-hint {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-left: 1px solid var(--panel-border);
+  padding-left: 12px;
+}
+
+.status-badge {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 11px;
+  background: var(--hover-bg);
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: capitalize;
+}
+
+.status-badge-selected {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+}

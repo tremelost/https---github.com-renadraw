@@ -1,0 +1,130 @@
+.topbar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px 18px 0 0;
+  border-bottom: none;
+  padding: 10px 12px;
+  box-shadow: 0 -2px 20px var(--shadow);
+  z-index: 100;
+  width: 228px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+/* Each row is a flex row */
+.topbar-row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 4px;
+}
+
+/* Spacer pushes right group to far right */
+.topbar-spacer {
+  flex: 1;
+}
+
+/* Thin horizontal line between rows */
+.topbar-row-divider {
+  height: 1px;
+  background: var(--panel-border);
+  border-radius: 1px;
+  margin: 0 -2px;
+}
+
+.topbar-group {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.topbar-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.topbar-btn:hover:not(:disabled) {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.topbar-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.topbar-btn.active {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--accent);
+}
+
+.topbar-btn-danger:hover {
+  color: #EF4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.topbar-zoom-badge {
+  min-width: 44px;
+  height: 30px;
+  padding: 0 6px;
+  border: none;
+  background: var(--hover-bg);
+  border-radius: 9px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.topbar-zoom-badge:hover {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--accent);
+}
+
+.topbar-btn-export {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #ffffff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+  white-space: nowrap;
+}
+
+.topbar-btn-export:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.5);
+  transform: translateY(-1px);
+}
+
+.topbar-btn-export:active {
+  transform: translateY(0);
+}
