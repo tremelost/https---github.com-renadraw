@@ -54,6 +54,7 @@ export interface CanvasElement {
   roughness: number;
   seed: number;
   isSelected?: boolean;
+  isEditing?: boolean;
 }
 
 export interface CanvasState {
@@ -65,6 +66,8 @@ export interface CanvasState {
   strokeWidth: number;
   opacity: number;
   roughness: number;
+  fontFamily: string;
+  fontSize: number;
   zoom: number;
   panX: number;
   panY: number;

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { CanvasElement, CanvasState, ToolType } from '../types/canvas.types';
+import { measureTextDimensions } from '../utils/drawing';
 
 interface HistoryEntry {
   elements: CanvasElement[];
@@ -37,6 +38,8 @@ interface CanvasStore extends Omit<CanvasState, 'selectedElementId'> {
   setStrokeWidth: (width: number) => void;
   setOpacity: (opacity: number) => void;
   setRoughness: (roughness: number) => void;
+  setFontFamily: (fontFamily: string) => void;
+  setFontSize: (fontSize: number) => void;
 
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
@@ -59,6 +62,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   strokeWidth: 2,
   opacity: 1,
   roughness: 1.2,
+  fontFamily: 'Caveat',
+  fontSize: 20,
   zoom: 1,
   panX: 0,
   panY: 0,
@@ -187,6 +192,30 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     set({ roughness });
     const { selectedElementIds } = get();
     selectedElementIds.forEach((id) => get().updateElement(id, { roughness }));
+  },
+
+  setFontFamily: (fontFamily) => {
+    set((state) => {
+      const updatedElements = state.elements.map((el) =>
+        state.selectedElementIds.includes(el.id) && el.type === 'text'
+          ? { ...el, fontFamily }
+          : el
+      );
+      return { fontFamily, elements: updatedElements };
+    });
+  },
+
+  setFontSize: (fontSize) => {
+    set((state) => {
+      const updatedElements = state.elements.map((el) => {
+        if (state.selectedElementIds.includes(el.id) && el.type === 'text') {
+          const { width, height } = measureTextDimensions(el.text || '', fontSize);
+          return { ...el, fontSize, width, height };
+        }
+        return el;
+      });
+      return { fontSize, elements: updatedElements };
+    });
   },
 
   setZoom: (zoom) => set({ zoom: Math.min(Math.max(zoom, 0.1), 5) }),

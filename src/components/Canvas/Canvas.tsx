@@ -15,7 +15,7 @@ interface ContextMenuState {
 export function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null!);
   const gridCanvasRef = useRef<HTMLCanvasElement>(null!);
-  const { handleMouseDown, handleMouseMove, handleMouseUp } = useCanvas(canvasRef, gridCanvasRef);
+  const { handleMouseDown, handleMouseMove, handleMouseUp, handleDoubleClick } = useCanvas(canvasRef, gridCanvasRef);
   const { activeTool, zoom, panX, panY, strokeWidth } = useCanvasStore();
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
@@ -63,6 +63,7 @@ export function Canvas() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
       />
       {contextMenu && (

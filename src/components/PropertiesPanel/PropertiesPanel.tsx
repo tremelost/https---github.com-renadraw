@@ -42,8 +42,8 @@ const ROUGHNESS_LEVELS = [
 export function PropertiesPanel() {
   const {
     selectedElementIds, elements,
-    strokeColor, fillColor, strokeWidth, opacity, roughness,
-    setStrokeColor, setFillColor, setStrokeWidth, setOpacity, setRoughness,
+    strokeColor, fillColor, strokeWidth, opacity, roughness, fontFamily, fontSize,
+    setStrokeColor, setFillColor, setStrokeWidth, setOpacity, setRoughness, setFontFamily, setFontSize,
     activeTool, isDarkMode,
   } = useCanvasStore();
 
@@ -68,6 +68,8 @@ export function PropertiesPanel() {
   const currentStrokeWidth = firstEl?.strokeWidth ?? strokeWidth;
   const currentOpacity = firstEl?.opacity ?? opacity;
   const currentRoughness = firstEl?.roughness ?? roughness;
+  const currentFontFamily = firstEl?.fontFamily ?? fontFamily;
+  const currentFontSize = firstEl?.fontSize ?? fontSize;
 
   const isTextTool = activeTool === 'text' || firstEl?.type === 'text';
   const isImageEl = selectedElements.every((el) => el.type === 'image') && selectedElements.length > 0;
@@ -141,6 +143,35 @@ export function PropertiesPanel() {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {isTextTool && (
+        <div className="props-section">
+          <p className="props-label">Font</p>
+          <div className="roughness-grid">
+            <button
+              className={`roughness-btn ${currentFontFamily === 'Caveat' ? 'active' : ''}`}
+              style={{ fontFamily: "'Caveat', cursive", fontSize: '16px' }}
+              onClick={() => setFontFamily('Caveat')}
+            >
+              Fun
+            </button>
+            <button
+              className={`roughness-btn ${currentFontFamily === 'Inter' ? 'active' : ''}`}
+              style={{ fontFamily: "'Inter', sans-serif" }}
+              onClick={() => setFontFamily('Inter')}
+            >
+              Normal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isTextTool && (
+        <div className="props-section">
+          <p className="props-label">Font Size — {currentFontSize}px</p>
+          <input type="range" id="fontsize-slider" className="slider" min={8} max={72} step={1} value={currentFontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} />
         </div>
       )}
 

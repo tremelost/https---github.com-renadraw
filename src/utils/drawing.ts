@@ -5,6 +5,13 @@ export function getRoughCanvas(canvas: HTMLCanvasElement) {
   return rough.canvas(canvas);
 }
 
+export function measureTextDimensions(text: string, fontSize: number) {
+  const lines = text.split('\n');
+  const width = Math.max(...lines.map((l) => l.length)) * fontSize * 0.6;
+  const height = lines.length * fontSize * 1.3;
+  return { width, height };
+}
+
 export function drawElement(
   rc: ReturnType<typeof rough.canvas>,
   ctx: CanvasRenderingContext2D,
@@ -66,7 +73,9 @@ export function drawElement(
     case 'text':
       if (element.text) {
         const fontSize = element.fontSize || 20;
-        ctx.font = `${fontSize}px "${element.fontFamily || 'Caveat'}", cursive`;
+        const family = element.fontFamily || 'Caveat';
+        const fallback = family === 'Inter' ? 'sans-serif' : 'cursive';
+        ctx.font = `${fontSize}px "${family}", ${fallback}`;
         ctx.fillStyle = strokeColor;
         ctx.textBaseline = 'top';
         element.text.split('\n').forEach((line, i) => {

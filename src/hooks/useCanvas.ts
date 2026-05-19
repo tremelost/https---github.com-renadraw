@@ -96,6 +96,8 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
 
     // Draw elements
     for (const el of elements) {
+      if (el.isEditing) continue; // Skip drawing elements that are currently being edited
+
       if (el.type === 'eraser') {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
@@ -227,7 +229,15 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
       return;
     }
 
-    if (currentTool === 'text') { showTextInput(point); return; }
+    if (currentTool === 'text') {
+      e.preventDefault();
+      if (textareaRef.current) {
+        textareaRef.current.blur();
+        return;
+      }
+      showTextInput(point);
+      return;
+    }
     if (currentTool === 'image') { triggerImageUpload(); return; }
 
     // Drawing tools (including eraser)
@@ -378,47 +388,117 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
   }, [canvasRef, store, render]);
 
   // ── Text Input ──────────────────────────────────────────────────────────────
-  const showTextInput = useCallback((point: Point) => {
+  const showTextInput = useCallback((point: Point, editElementId?: string, initialText?: string, existingFontSize?: number, existingFontFamily?: string) => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
-    const { zoom, panX, panY } = useCanvasStore.getState();
+    const { zoom, panX, panY, fontFamily: storeFontFamily, fontSize: storeFontSize, strokeColor } = useCanvasStore.getState();
+    let currentFontFamily = existingFontFamily || storeFontFamily;
+    let currentFontSize = existingFontSize || storeFontSize;
     const screenX = point.x * zoom + panX + rect.left;
     const screenY = point.y * zoom + panY + rect.top;
 
-    if (textareaRef.current) textareaRef.current.remove();
+    if (editElementId) {
+      store.updateElement(editElementId, { isEditing: true });
+      render();
+    }
+
+    if (textareaRef.current) {
+      textareaRef.current.blur();
+    }
     const textarea = document.createElement('textarea');
+    const cssFontFamily = currentFontFamily === 'Inter' ? "'Inter', sans-serif" : "'Caveat', cursive";
     textarea.style.cssText = `
       position:fixed;left:${screenX}px;top:${screenY}px;
-      font-size:${20 * zoom}px;font-family:'Caveat',cursive;
+      font-size:${currentFontSize * zoom}px;font-family:${cssFontFamily};
       background:transparent;border:2px dashed #7C3AED;border-radius:4px;
-      outline:none;color:${useCanvasStore.getState().strokeColor};
+      outline:none;color:${strokeColor};
       resize:none;min-width:120px;min-height:40px;padding:4px 8px;
       z-index:1000;line-height:1.3;overflow:hidden;
     `;
     textarea.placeholder = 'Type here...';
+    if (initialText) textarea.value = initialText;
     document.body.appendChild(textarea);
-    textarea.focus();
+    setTimeout(() => textarea.focus(), 10);
     textareaRef.current = textarea;
 
+    // Dynamically update textarea if properties panel changes font settings while editing
+    const unsubscribeStore = useCanvasStore.subscribe((state) => {
+      currentFontSize = state.fontSize;
+      textarea.style.fontSize = `${currentFontSize * state.zoom}px`;
+      currentFontFamily = state.fontFamily;
+      textarea.style.fontFamily = currentFontFamily === 'Inter' ? "'Inter', sans-serif" : "'Caveat', cursive";
+    });
+
     const commit = () => {
+      unsubscribeStore();
       const text = textarea.value.trim();
       if (text) {
-        const id = uuidv4();
         const { strokeColor, opacity } = useCanvasStore.getState();
-        const fontSize = 20;
         const lines = text.split('\n');
-        const w = Math.max(...lines.map((l) => l.length)) * fontSize * 0.6;
-        const h = lines.length * fontSize * 1.3;
-        store.addElement({ id, type: 'text', x: point.x, y: point.y, width: w, height: h, text, fontSize, fontFamily: 'Caveat', strokeColor, fillColor: 'transparent', strokeWidth: 1, opacity, roughness: 0, seed: 0 });
+        const w = Math.max(...lines.map((l) => l.length)) * currentFontSize * 0.6;
+        const h = lines.length * currentFontSize * 1.3;
+        
+        if (editElementId) {
+          store.updateElement(editElementId, { text, width: w, height: h, isEditing: false, fontSize: currentFontSize, fontFamily: currentFontFamily });
+        } else {
+          const id = uuidv4();
+          store.addElement({ id, type: 'text', x: point.x, y: point.y, width: w, height: h, text, fontSize: currentFontSize, fontFamily: currentFontFamily, strokeColor, fillColor: 'transparent', strokeWidth: 1, opacity, roughness: 0, seed: 0 });
+        }
+        store.pushHistory();
+        render();
+      } else if (editElementId) {
+        // Delete if text was erased completely
+        store.deleteElement(editElementId);
         store.pushHistory();
         render();
       }
+      
+      if (editElementId && !text) {
+        // Already deleted above, nothing to do
+      } else if (editElementId && text) {
+         // Already updated above, nothing to do
+      }
+      
       textarea.remove();
       textareaRef.current = null;
+      store.setActiveTool('select');
     };
-    textarea.addEventListener('blur', commit);
-    textarea.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { textarea.remove(); textareaRef.current = null; } });
+    const handleBlur = (ev: FocusEvent) => {
+      const related = ev.relatedTarget as HTMLElement;
+      if (related && related.closest('.props-panel')) {
+        return;
+      }
+      commit();
+    };
+    textarea.addEventListener('blur', handleBlur);
+    textarea.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        textarea.removeEventListener('blur', handleBlur);
+        if (editElementId) {
+          store.updateElement(editElementId, { isEditing: false });
+          render();
+        }
+        textarea.remove();
+        textareaRef.current = null;
+        store.setActiveTool('select');
+      } else if (ev.key === 'Enter' && !ev.shiftKey) {
+        ev.preventDefault();
+        textarea.blur();
+      }
+    });
   }, [canvasRef, store, render]);
+
+  // ── Double Click ────────────────────────────────────────────────────────────
+  const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const point = getCanvasPoint(e);
+    const { elements } = useCanvasStore.getState();
+    const hit = [...elements].reverse().find((el) => isPointInElement(point, el));
+    
+    if (hit && hit.type === 'text') {
+      store.setActiveTool('text');
+      showTextInput({ x: hit.x, y: hit.y }, hit.id, hit.text, hit.fontSize, hit.fontFamily);
+    }
+  }, [getCanvasPoint, store, showTextInput]);
 
   // ── Image Upload ────────────────────────────────────────────────────────────
   const triggerImageUpload = useCallback(() => {
@@ -479,5 +559,5 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
     return unsubscribe;
   }, [render]);
 
-  return { handleMouseDown, handleMouseMove, handleMouseUp, render, triggerImageUpload };
+  return { handleMouseDown, handleMouseMove, handleMouseUp, handleDoubleClick, render, triggerImageUpload };
 }
