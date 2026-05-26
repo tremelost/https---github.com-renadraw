@@ -1,4 +1,5 @@
 import { useCanvasStore } from '../../store/canvasStore';
+import { useCollabStore } from '../../store/collabStore';
 import { ToolType } from '../../types/canvas.types';
 import './Toolbar.css';
 
@@ -81,6 +82,9 @@ const TOOLS: Tool[] = [
 
 export function Toolbar() {
   const { activeTool, setActiveTool } = useCanvasStore();
+  const { boardId, userRole } = useCollabStore();
+
+  const isViewer = boardId && userRole === 'viewer';
 
   return (
     <div className="toolbar" role="toolbar" aria-label="Drawing tools">
@@ -89,26 +93,29 @@ export function Toolbar() {
         <span className="toolbar-logo-accent">draw</span>
       </div>
 
-      <div className="toolbar-divider" />
-
-      <div className="toolbar-tools">
-        {TOOLS.map((tool) => (
-          <button
-            key={tool.id}
-            id={`tool-${tool.id}`}
-            className={`toolbar-btn ${activeTool === tool.id ? 'active' : ''}`}
-            onClick={() => setActiveTool(tool.id)}
-            title={`${tool.label} (${tool.shortcut})`}
-            aria-pressed={activeTool === tool.id}
-          >
-            <span className="tool-icon">{tool.icon}</span>
-            <span className="tool-tooltip">
-              {tool.label}
-              <kbd>{tool.shortcut}</kbd>
-            </span>
-          </button>
-        ))}
-      </div>
+      {!isViewer && (
+        <>
+          <div className="toolbar-divider" />
+          <div className="toolbar-tools">
+            {TOOLS.map((tool) => (
+              <button
+                key={tool.id}
+                id={`tool-${tool.id}`}
+                className={`toolbar-btn ${activeTool === tool.id ? 'active' : ''}`}
+                onClick={() => setActiveTool(tool.id)}
+                title={`${tool.label} (${tool.shortcut})`}
+                aria-pressed={activeTool === tool.id}
+              >
+                <span className="tool-icon">{tool.icon}</span>
+                <span className="tool-tooltip">
+                  {tool.label}
+                  <kbd>{tool.shortcut}</kbd>
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

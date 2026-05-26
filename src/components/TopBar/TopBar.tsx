@@ -1,5 +1,10 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCanvasStore } from '../../store/canvasStore';
+import { useCollabStore } from '../../store/collabStore';
+import { InviteModal } from '../InviteModal/InviteModal';
 import { exportCanvasToPNG, saveToRenadrawFile, loadFromRenadrawFile } from '../../utils/export';
+import { Share2, LogOut, Eye } from 'lucide-react';
 import './TopBar.css';
 
 export function TopBar() {
@@ -11,8 +16,22 @@ export function TopBar() {
     clearCanvas, elements, setElements,
   } = useCanvasStore();
 
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
+  const {
+    boardId,
+    boardName,
+    userRole,
+    collaborators,
+    leaveBoard,
+    isGuest,
+    guestName: _guestName
+  } = useCollabStore();
+
+  const navigate = useNavigate();
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+
+  const isViewer = boardId && userRole === 'viewer';
+  const canUndo = historyIndex > 0 && !isViewer;
+  const canRedo = historyIndex < history.length - 1 && !isViewer;
 
   const handleExport = () => exportCanvasToPNG(elements, isDarkMode);
   const handleSave = () => saveToRenadrawFile(elements);
@@ -30,27 +49,95 @@ export function TopBar() {
   const handleZoomIn  = () => setZoom(zoom * 1.25);
   const handleZoomOut = () => setZoom(zoom / 1.25);
 
+  const handleExit = () => {
+    if (boardId) {
+      leaveBoard();
+    }
+    navigate('/');
+  };
+
   return (
     <div className="topbar">
-
-      {/* ── Row 1: Undo/Redo + Zoom ── */}
+      {/* ── Row 1: Dashboard Exit + Undo/Redo + Zoom + Collab ── */}
       <div className="topbar-row">
         <div className="topbar-group">
-          <button id="btn-undo" className="topbar-btn" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
-            </svg>
+          <button id="btn-exit" className="topbar-btn" onClick={handleExit} title="Exit to Dashboard">
+            <LogOut width="15" height="15" />
           </button>
-          <button id="btn-redo" className="topbar-btn" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3L21 13"/>
-            </svg>
-          </button>
+          
+          <div style={{ width: '1px', height: '16px', background: 'var(--panel-border)', margin: '0 4px' }} />
+
+          {boardId ? (
+            <div className="topbar-board-info">
+              <span className="topbar-board-name">{boardName}</span>
+              {isGuest && (
+                <span className="topbar-guest-badge">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <span>Guest</span>
+                </span>
+              )}
+              {isViewer && !isGuest && (
+                <span className="topbar-viewer-badge">
+                  <Eye size={12} />
+                  <span>Read Only</span>
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="topbar-board-name local-mode">Local Workspace</span>
+          )}
         </div>
 
         <div className="topbar-spacer" />
 
+        {/* Collaboration controls */}
+        {boardId && (
+          <div className="topbar-group" style={{ marginRight: '8px' }}>
+            {/* Collaborators Avatars List */}
+            <div className="topbar-avatars">
+              {Object.values(collaborators).map((collab) => (
+                <div
+                  key={collab.email}
+                  className="topbar-avatar"
+                  style={{ backgroundColor: collab.color }}
+                  title={`${collab.email} (${collab.role})`}
+                >
+                  {collab.email.slice(0, 2)}
+                </div>
+              ))}
+            </div>
+
+            <button
+              className="topbar-btn topbar-btn-accent"
+              onClick={() => setIsInviteOpen(true)}
+              title={isGuest ? 'Share project link' : 'Share & Invite'}
+            >
+              <Share2 size={14} />
+              <span>Share</span>
+            </button>
+          </div>
+        )}
+
         <div className="topbar-group">
+          {!isViewer && (
+            <>
+              <button id="btn-undo" className="topbar-btn" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+                </svg>
+              </button>
+              <button id="btn-redo" className="topbar-btn" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3L21 13"/>
+                </svg>
+              </button>
+              <div style={{ width: '1px', height: '16px', background: 'var(--panel-border)', margin: '0 4px' }} />
+            </>
+          )}
+
           <button id="btn-zoom-out" className="topbar-btn" onClick={handleZoomOut} title="Zoom Out">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
@@ -94,29 +181,35 @@ export function TopBar() {
               </svg>
             )}
           </button>
-          <button id="btn-clear" className="topbar-btn topbar-btn-danger" onClick={() => { if (confirm('Clear canvas?')) clearCanvas(); }} title="Clear canvas">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-              <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-            </svg>
-          </button>
+          {!isViewer && (
+            <button id="btn-clear" className="topbar-btn topbar-btn-danger" onClick={() => { if (confirm('Clear canvas?')) clearCanvas(); }} title="Clear canvas">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+            </button>
+          )}
         </div>
 
         <div className="topbar-spacer" />
 
         <div className="topbar-group">
-          <button id="btn-load" className="topbar-btn" onClick={handleLoad} title="Open .renadraw file">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-          </button>
-          <button id="btn-save" className="topbar-btn" onClick={handleSave} title="Save as .renadraw">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-            </svg>
-          </button>
+          {!isViewer && (
+            <>
+              <button id="btn-load" className="topbar-btn" onClick={handleLoad} title="Open .renadraw file">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </button>
+              <button id="btn-save" className="topbar-btn" onClick={handleSave} title="Save as .renadraw">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                </svg>
+              </button>
+            </>
+          )}
         </div>
         
         <div style={{ width: '1px', height: '20px', background: 'var(--panel-border)', margin: '0 4px' }} />
@@ -129,6 +222,8 @@ export function TopBar() {
           Export
         </button>
       </div>
+
+      {isInviteOpen && <InviteModal onClose={() => setIsInviteOpen(false)} />}
     </div>
   );
 }

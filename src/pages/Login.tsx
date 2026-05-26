@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCanvasStore } from '../store/canvasStore';
 import './Login.css';
@@ -9,9 +9,12 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/board';
   const { isDarkMode } = useCanvasStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,11 +26,12 @@ export function Login() {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        // Optionally show success message
+        setSuccessMessage('Sign up successful! You can now sign in.');
+        setIsSignUp(false);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate('/board');
+        navigate(redirect);
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication');
@@ -53,6 +57,7 @@ export function Login() {
         </div>
 
         {error && <div className="login-error">{error}</div>}
+        {successMessage && <div className="login-success" style={{ color: '#10B981', textAlign: 'center', marginBottom: '16px', fontSize: '14px', fontWeight: 600 }}>{successMessage}</div>}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">

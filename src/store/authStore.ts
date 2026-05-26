@@ -20,11 +20,30 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       // Check active session
       const { data: { session } } = await supabase.auth.getSession();
-      set({ user: session?.user ?? null, isInitialized: true, isLoading: false });
+      const user = session?.user ?? null;
+      set({ user, isInitialized: true, isLoading: false });
+
+      if (user && user.email) {
+        // Sync profile to database
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          email: user.email,
+          updated_at: new Date().toISOString()
+        });
+      }
 
       // Listen for auth changes
-      supabase.auth.onAuthStateChange((_event, session) => {
-        set({ user: session?.user ?? null });
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        const currentUser = session?.user ?? null;
+        set({ user: currentUser });
+        if (currentUser && currentUser.email) {
+          // Sync profile to database
+          await supabase.from('profiles').upsert({
+            id: currentUser.id,
+            email: currentUser.email,
+            updated_at: new Date().toISOString()
+          });
+        }
       });
     } catch (error) {
       console.error('Failed to initialize auth:', error);

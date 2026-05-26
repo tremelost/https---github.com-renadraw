@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import rough from 'roughjs';
 import { v4 as uuidv4 } from 'uuid';
 import { useCanvasStore } from '../store/canvasStore';
+import { useCollabStore } from '../store/collabStore';
 import { CanvasElement, Point, SelectionRect } from '../types/canvas.types';
 import {
   drawElement,
@@ -14,6 +15,16 @@ import {
   isElementInSelectionRect,
 } from '../utils/drawing';
 import { readImageFile } from '../utils/export';
+
+type CanvasInputEvent = React.PointerEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement> | PointerEvent | MouseEvent;
+
+const shouldAppendDrawPoint = (points: Point[] | undefined, point: Point, strokeWidth: number) => {
+  const last = points?.[points.length - 1];
+  if (!last) return true;
+
+  const minDistance = Math.max(0.75, strokeWidth * 0.18);
+  return Math.hypot(point.x - last.x, point.y - last.y) >= minDistance;
+};
 
 export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCanvasRef?: React.RefObject<HTMLCanvasElement>) {
   const store = useCanvasStore();
@@ -45,13 +56,13 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
     return { x: (screenX - panX) / zoom, y: (screenY - panY) / zoom };
   }, []);
 
-  const getScreenPoint = useCallback((e: React.MouseEvent | MouseEvent): Point => {
+  const getScreenPoint = useCallback((e: CanvasInputEvent): Point => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }, [canvasRef]);
 
-  const getCanvasPoint = useCallback((e: React.MouseEvent | MouseEvent): Point => {
+  const getCanvasPoint = useCallback((e: CanvasInputEvent): Point => {
     const sp = getScreenPoint(e);
     return toCanvas(sp.x, sp.y);
   }, [toCanvas, getScreenPoint]);
@@ -133,6 +144,53 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
       drawMultiSelection(ctx, selectedElements);
     }
 
+    // Draw collaborators' cursors
+    const { collaborators } = useCollabStore.getState();
+    Object.values(collaborators).forEach((collab) => {
+      if (!collab.cursor) return;
+      const { x, y } = collab.cursor;
+      
+      ctx.save();
+      // Draw cursor arrow
+      ctx.fillStyle = collab.color;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5 / zoom;
+      
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 12 / zoom, y + 12 / zoom);
+      ctx.lineTo(x + 4 / zoom, y + 14 / zoom);
+      ctx.lineTo(x, y + 20 / zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Draw email badge
+      const fontSize = Math.max(9, 12 / zoom);
+      ctx.font = `${fontSize}px sans-serif`;
+      const text = collab.email.split('@')[0];
+      const textWidth = ctx.measureText(text).width;
+      const paddingX = 6 / zoom;
+      const paddingY = 4 / zoom;
+      
+      ctx.fillStyle = collab.color;
+      ctx.fillRect(
+        x + 10 / zoom,
+        y + 10 / zoom,
+        textWidth + paddingX * 2,
+        fontSize + paddingY * 2
+      );
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(
+        text,
+        x + 10 / zoom + paddingX,
+        y + 10 / zoom + fontSize + paddingY - 1 / zoom
+      );
+      
+      ctx.restore();
+    });
+
     ctx.restore();
 
     // Draw drag-selection rect in screen space (no transform)
@@ -155,10 +213,10 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
   }, [canvasRef, gridCanvasRef, preloadImage]);
 
   // ── Mouse Down ──────────────────────────────────────────────────────────────
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const { activeTool, strokeColor, fillColor, strokeWidth, opacity, roughness } = useCanvasStore.getState();
-    const point = getCanvasPoint(e);
-    const screen = getScreenPoint(e);
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const role = useCollabStore.getState().userRole;
+    const boardId = useCollabStore.getState().boardId;
 
     // Middle click / Alt+drag → pan
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -166,6 +224,14 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
       lastPoint.current = { x: e.clientX, y: e.clientY };
       return;
     }
+
+    if (boardId && role === 'viewer') {
+      return;
+    }
+
+    const { activeTool, strokeColor, fillColor, strokeWidth, opacity, roughness } = useCanvasStore.getState();
+    const point = getCanvasPoint(e);
+    const screen = getScreenPoint(e);
 
     let currentTool = activeTool;
 
@@ -259,8 +325,14 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
   }, [getCanvasPoint, getScreenPoint, store]);
 
   // ── Mouse Move ──────────────────────────────────────────────────────────────
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const point = getCanvasPoint(e);
+
+    // Broadcast cursor position if collaborative
+    const { boardId, broadcastCursor } = useCollabStore.getState();
+    if (boardId) {
+      broadcastCursor(point);
+    }
 
     if (isPanning.current) {
       const dx = e.clientX - lastPoint.current.x;
@@ -323,7 +395,22 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
     if (!el) return;
 
     if (el.type === 'pencil' || el.type === 'eraser') {
-      store.updateElement(id, { points: [...(el.points || []), point] });
+      const nativeEvent = e.nativeEvent;
+      const pointerEvents = typeof nativeEvent.getCoalescedEvents === 'function'
+        ? nativeEvent.getCoalescedEvents()
+        : [nativeEvent];
+      const nextPoints = [...(el.points || [])];
+
+      pointerEvents.forEach((event) => {
+        const nextPoint = getCanvasPoint(event);
+        if (shouldAppendDrawPoint(nextPoints, nextPoint, el.strokeWidth)) {
+          nextPoints.push(nextPoint);
+        }
+      });
+
+      if (nextPoints.length !== (el.points || []).length) {
+        store.updateElement(id, { points: nextPoints });
+      }
     } else {
       store.updateElement(id, { width: point.x - el.x, height: point.y - el.y });
     }
@@ -331,7 +418,13 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
   }, [getCanvasPoint, store, render]);
 
   // ── Mouse Up ────────────────────────────────────────────────────────────────
-  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement> | MouseEvent) => {
+  const handlePointerUp = useCallback((e: CanvasInputEvent) => {
+    const pointerId = 'pointerId' in e ? e.pointerId : null;
+    const target = 'currentTarget' in e ? e.currentTarget as HTMLCanvasElement : null;
+    if (pointerId !== null && target?.hasPointerCapture(pointerId)) {
+      target.releasePointerCapture(pointerId);
+    }
+
     if (isDragSelecting.current && selectionRect.current) {
       const sr = selectionRect.current;
       const { elements } = useCanvasStore.getState();
@@ -559,5 +652,12 @@ export function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>, gridCan
     return unsubscribe;
   }, [render]);
 
-  return { handleMouseDown, handleMouseMove, handleMouseUp, handleDoubleClick, render, triggerImageUpload };
+  const handleMouseLeave = useCallback(() => {
+    const { boardId, broadcastCursor } = useCollabStore.getState();
+    if (boardId) {
+      broadcastCursor(null);
+    }
+  }, []);
+
+  return { handlePointerDown, handlePointerMove, handlePointerUp, handleMouseLeave, handleDoubleClick, render, triggerImageUpload };
 }

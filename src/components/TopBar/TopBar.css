@@ -12,7 +12,7 @@
   padding: 10px 12px;
   box-shadow: 0 -2px 20px var(--shadow);
   z-index: 100;
-  width: 280px;
+  width: 320px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: background 0.3s, border-color 0.3s;
@@ -127,4 +127,113 @@
 
 .topbar-btn-export:active {
   transform: translateY(0);
+}
+
+/* Collaborative Board Title & Info */
+.topbar-board-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  margin-left: 4px;
+}
+
+.topbar-board-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.topbar-board-name.local-mode {
+  max-width: 140px;
+  color: var(--text-secondary);
+}
+
+.topbar-viewer-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  padding: 1px 4px;
+  border-radius: 4px;
+  width: max-content;
+}
+
+.topbar-guest-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #D97706;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  padding: 1px 4px;
+  border-radius: 4px;
+  width: max-content;
+}
+
+
+/* Collaborative Avatars List */
+.topbar-avatars {
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.topbar-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--panel-bg);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  margin-left: -6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.topbar-avatar:first-child {
+  margin-left: 0;
+}
+
+.topbar-avatar:hover {
+  transform: translateY(-2px);
+  z-index: 10;
+}
+
+/* Collaborative Share button styling */
+.topbar-btn-accent {
+  background: var(--accent) !important;
+  color: white !important;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 0 8px;
+  height: 26px;
+  width: auto;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.topbar-btn-accent:hover {
+  background: var(--accent-hover) !important;
+  transform: translateY(-0.5px);
 }

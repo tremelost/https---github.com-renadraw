@@ -1,0 +1,186 @@
+.delete-project-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: deleteProjectFadeIn 0.18s ease-out;
+}
+
+.delete-project-modal {
+  width: 100%;
+  max-width: 440px;
+  background: var(--panel-bg, #ffffff);
+  border: 1px solid var(--panel-border, rgba(0, 0, 0, 0.08));
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  color: var(--text-primary, #111827);
+  overflow: hidden;
+  animation: deleteProjectSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.delete-project-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px 4px;
+}
+
+.delete-project-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-project-close {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #6B7280);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.delete-project-close:hover:not(:disabled) {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
+  color: var(--text-primary, #111827);
+}
+
+.delete-project-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.delete-project-body {
+  padding: 12px 22px 20px;
+}
+
+.delete-project-body h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary, #111827);
+}
+
+.delete-project-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary, #6B7280);
+}
+
+.delete-project-body strong {
+  color: var(--text-primary, #111827);
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.delete-project-warning {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #B91C1C;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.delete-project-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 22px 22px;
+  border-top: 1px solid var(--panel-border, rgba(0, 0, 0, 0.08));
+}
+
+.delete-project-cancel-btn,
+.delete-project-confirm-btn {
+  min-height: 40px;
+  border-radius: 9px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.delete-project-cancel-btn {
+  border: 1.5px solid var(--panel-border, rgba(0, 0, 0, 0.1));
+  background: transparent;
+  color: var(--text-secondary, #6B7280);
+}
+
+.delete-project-cancel-btn:hover:not(:disabled) {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
+  color: var(--text-primary, #111827);
+}
+
+.delete-project-confirm-btn {
+  border: none;
+  background: #EF4444;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.delete-project-confirm-btn:hover:not(:disabled) {
+  background: #DC2626;
+}
+
+.delete-project-cancel-btn:active:not(:disabled),
+.delete-project-confirm-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.delete-project-cancel-btn:disabled,
+.delete-project-confirm-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@keyframes deleteProjectFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes deleteProjectSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .delete-project-actions {
+    flex-direction: column-reverse;
+  }
+
+  .delete-project-cancel-btn,
+  .delete-project-confirm-btn {
+    width: 100%;
+  }
+}

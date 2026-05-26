@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "realtime": "node server/realtime-server.js",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

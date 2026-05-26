@@ -163,3 +163,339 @@
     transform: translateY(0);
   }
 }
+
+/* ── Dashboard Layout ── */
+.welcome-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  text-align: left;
+}
+
+.welcome-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.welcome-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.welcome-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.welcome-user-email {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.welcome-sign-out-btn {
+  background: transparent;
+  border: 1px solid var(--text-secondary, #6B7280);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-secondary, #6B7280);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Nunito', sans-serif;
+}
+
+.welcome-sign-out-btn:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+.welcome-board-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.welcome-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  font-family: 'Nunito', sans-serif;
+}
+
+.welcome-action-btn.local-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary, #111827);
+}
+
+.welcome-page.dark .welcome-action-btn.local-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #F3F4F6;
+}
+
+.welcome-action-btn.local-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.welcome-action-btn.collab-btn {
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: white;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+
+.welcome-action-btn.collab-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.45);
+}
+
+/* Create Board Form */
+.welcome-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(124, 58, 237, 0.06);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  animation: slideUpFade 0.2s ease;
+}
+
+.welcome-create-input {
+  width: 100%;
+  background: transparent;
+  border: 1.5px solid rgba(124, 58, 237, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: 'Nunito', sans-serif;
+  color: var(--text-primary, #111827);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.welcome-create-input:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.welcome-create-input::placeholder {
+  color: var(--text-secondary, #6B7280);
+}
+
+.welcome-create-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.welcome-create-submit {
+  flex: 1;
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Nunito', sans-serif;
+}
+
+.welcome-create-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.welcome-create-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.welcome-create-cancel {
+  background: transparent;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text-secondary, #6B7280);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  transition: all 0.2s;
+}
+
+.welcome-create-cancel:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+  color: var(--text-primary, #111827);
+}
+
+/* Boards List Section */
+.welcome-boards-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.welcome-boards-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary, #6B7280);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.welcome-boards-empty {
+  font-size: 14px;
+  color: var(--text-secondary, #6B7280);
+  text-align: center;
+  padding: 20px;
+  border: 1.5px dashed rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin: 0;
+}
+
+.welcome-page.dark .welcome-boards-empty {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.welcome-boards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.welcome-board-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  transition: all 0.2s;
+  width: 100%;
+  overflow: hidden;
+}
+
+.welcome-page.dark .welcome-board-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.welcome-board-item:hover {
+  transform: translateX(4px);
+  border-color: rgba(124, 58, 237, 0.3);
+  background: rgba(124, 58, 237, 0.04);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+}
+
+.welcome-board-open-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 10px 12px 16px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Nunito', sans-serif;
+}
+
+.welcome-board-chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary, #6B7280);
+}
+
+.welcome-board-delete-btn {
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary, #6B7280);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.welcome-board-delete-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.welcome-board-delete-btn:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.welcome-board-icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7C3AED;
+  flex-shrink: 0;
+}
+
+.welcome-board-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.welcome-board-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.welcome-board-date {
+  font-size: 12px;
+  color: var(--text-secondary, #6B7280);
+  margin-top: 2px;
+}

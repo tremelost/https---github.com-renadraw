@@ -13,11 +13,12 @@ interface CanvasStore extends Omit<CanvasState, 'selectedElementId'> {
   history: HistoryEntry[];
   historyIndex: number;
   clipboard: CanvasElement[];
+  isRemoteChange: boolean;
 
   // Actions
   setActiveTool: (tool: ToolType) => void;
   addElement: (element: CanvasElement) => void;
-  setElements: (elements: CanvasElement[]) => void;
+  setElements: (elements: CanvasElement[], isRemote?: boolean) => void;
   updateElement: (id: string, updates: Partial<CanvasElement>) => void;
   deleteElement: (id: string) => void;
   deleteSelected: () => void;
@@ -72,6 +73,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   history: [{ elements: [] }],
   historyIndex: 0,
   clipboard: [],
+  isRemoteChange: false,
 
   setActiveTool: (tool) => set({ activeTool: tool, selectedElementIds: [] }),
 
@@ -80,9 +82,11 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     set({ elements: [...elements, element] });
   },
 
-  setElements: (elements) => {
-    set({ elements, selectedElementIds: [] });
-    get().pushHistory();
+  setElements: (elements, isRemote = false) => {
+    set({ elements, selectedElementIds: [], isRemoteChange: isRemote });
+    if (!isRemote) {
+      get().pushHistory();
+    }
   },
 
   updateElement: (id, updates) => {

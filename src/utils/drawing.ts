@@ -12,6 +12,76 @@ export function measureTextDimensions(text: string, fontSize: number) {
   return { width, height };
 }
 
+export function getSmoothedPoints(points: Point[], strokeWidth = 2): Point[] {
+  if (points.length <= 2) return points;
+
+  const minDistance = Math.max(1.5, strokeWidth * 0.35);
+  const filtered: Point[] = [points[0]];
+
+  for (let i = 1; i < points.length; i++) {
+    const prev = filtered[filtered.length - 1];
+    const current = points[i];
+    const distance = Math.hypot(current.x - prev.x, current.y - prev.y);
+
+    if (distance >= minDistance || i === points.length - 1) {
+      filtered.push(current);
+    }
+  }
+
+  if (filtered.length <= 2) return filtered;
+
+  return filtered.map((point, index) => {
+    if (index === 0 || index === filtered.length - 1) return point;
+
+    const previous = filtered[index - 1];
+    const next = filtered[index + 1];
+    return {
+      x: point.x * 0.5 + (previous.x + next.x) * 0.25,
+      y: point.y * 0.5 + (previous.y + next.y) * 0.25,
+    };
+  });
+}
+
+export function drawSmoothPath(
+  ctx: CanvasRenderingContext2D,
+  points: Point[],
+  strokeWidth: number
+) {
+  const smoothedPoints = getSmoothedPoints(points, strokeWidth);
+  if (smoothedPoints.length === 0) return;
+
+  ctx.beginPath();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.moveTo(smoothedPoints[0].x, smoothedPoints[0].y);
+
+  if (smoothedPoints.length === 1) {
+    ctx.lineTo(smoothedPoints[0].x + 0.01, smoothedPoints[0].y + 0.01);
+    ctx.stroke();
+    return;
+  }
+
+  if (smoothedPoints.length === 2) {
+    ctx.lineTo(smoothedPoints[1].x, smoothedPoints[1].y);
+    ctx.stroke();
+    return;
+  }
+
+  for (let i = 1; i < smoothedPoints.length - 1; i++) {
+    const current = smoothedPoints[i];
+    const next = smoothedPoints[i + 1];
+    const midpoint = {
+      x: (current.x + next.x) / 2,
+      y: (current.y + next.y) / 2,
+    };
+    ctx.quadraticCurveTo(current.x, current.y, midpoint.x, midpoint.y);
+  }
+
+  const lastPoint = smoothedPoints[smoothedPoints.length - 1];
+  ctx.lineTo(lastPoint.x, lastPoint.y);
+  ctx.stroke();
+}
+
 export function drawElement(
   rc: ReturnType<typeof rough.canvas>,
   ctx: CanvasRenderingContext2D,
@@ -66,7 +136,9 @@ export function drawElement(
 
     case 'pencil':
       if (element.points && element.points.length > 1) {
-        rc.linearPath(element.points.map((p) => [p.x, p.y]), { ...options, fill: undefined, roughness: 0.5 });
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = strokeWidth;
+        drawSmoothPath(ctx, element.points, strokeWidth);
       }
       break;
 
